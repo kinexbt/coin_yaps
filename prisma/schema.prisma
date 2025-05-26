@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?   @unique
+  image         String?
+  twitterId     String?   @unique
+  username      String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Remove the array fields and relation attributes for one-to-many
+  comments      Comment[]
+  predictions   Prediction[]
+  accounts      Account[]
+  sessions      Session[]
+  
+  @@map("users")
+}
+
+model Token {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  symbol        String    @unique
+  name          String
+  address       String    @unique
+  network       String    // 'solana' or 'bsc'
+  price         Float?
+  marketCap     Float?
+  volume24h     Float?
+  priceChange24h Float?
+  supply        Float?
+  liquidity     Float?
+  rCurve        Float?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Remove the array fields and relation attributes for one-to-many
+  comments      Comment[]
+  predictions   Prediction[]
+  
+  @@map("tokens")
+}
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  userId    String   @db.ObjectId
+  tokenId   String   @db.ObjectId
+  parentId  String?  @db.ObjectId // for replies
+  likes     Int      @default(0)
+  likedBy   String[] @db.ObjectId // user IDs who liked this comment
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Only specify fields and references on the "many" side
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     Token    @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies   Comment[] @relation("CommentReplies")
+  
+  @@map("comments")
+}
+
+model Prediction {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  tokenId     String   @db.ObjectId
+  priceRange  String   // "$0-100K", "$100K-1M", etc.
+  percentage  Int      // percentage of votes
+  createdAt   DateTime @default(now())
+  
+  // Only specify fields and references on the "many" side
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token       Token    @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, tokenId])
+  @@map("predictions")
+}
+
+// NextAuth models for MongoDB
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}

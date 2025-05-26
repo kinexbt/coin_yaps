@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?   @unique
+  image         String?
+  twitterId     String?   @unique
+  username      String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  commentIds    String[]  @db.ObjectId
+  predictionIds String[]  @db.ObjectId
+  accountIds    String[]  @db.ObjectId
+  sessionIds    String[]  @db.ObjectId
+  
+  comments      Comment[] @relation(fields: [commentIds], references: [id])
+  predictions   Prediction[] @relation(fields: [predictionIds], references: [id])
+  accounts      Account[] @relation(fields: [accountIds], references: [id])
+  sessions      Session[] @relation(fields: [sessionIds], references: [id])
+  
+  @@map("users")
+}
+
+model Token {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  symbol        String    @unique
+  name          String
+  address       String    @unique
+  network       String    // 'solana' or 'bsc'
+  price         Float?
+  marketCap     Float?
+  volume24h     Float?
+  priceChange24h Float?
+  supply        Float?
+  liquidity     Float?
+  rCurve        Float?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  commentIds    String[]  @db.ObjectId
+  predictionIds String[]  @db.ObjectId
+  
+  comments      Comment[] @relation(fields: [commentIds], references: [id])
+  predictions   Prediction[] @relation(fields: [predictionIds], references: [id])
+  
+  @@map("tokens")
+}
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  userId    String   @db.ObjectId
+  tokenId   String   @db.ObjectId
+  parentId  String?  @db.ObjectId // for replies
+  likes     Int      @default(0)
+  likedBy   String[] @db.ObjectId // user IDs who liked this comment
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id])
+  token     Token    @relation(fields: [tokenId], references: [id])
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies   Comment[] @relation("CommentReplies")
+  
+  @@map("comments")
+}
+
+model Prediction {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  tokenId     String   @db.ObjectId
+  priceRange  String   // "$0-100K", "$100K-1M", etc.
+  percentage  Int      // percentage of votes
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id])
+  token       Token    @relation(fields: [tokenId], references: [id])
+  
+  @@unique([userId, tokenId])
+  @@map("predictions")
+}
+
+// NextAuth models for MongoDB
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}

@@ -1,0 +1,180 @@
+
+
+// types/index.ts - Central export file
+export type { User } from './user';
+export type { Comment } from './comment';
+export type { Prediction } from './prediction';
+export type { Token, TokenWithComments } from './token';
+
+// Alternative: If you prefer to keep everything in one file
+// types/index.ts - All types in one file
+export interface User {
+  id: string;
+  name?: string;
+  email?: string;
+  image?: string;
+  username?: string;
+  twitterId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  userId: string;
+  tokenId: string;
+  parentId?: string;
+  likes: number;
+  likedBy: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  user: {
+    id: string;
+    name?: string;
+    username?: string;
+    image?: string;
+  };
+  replies?: Comment[];
+}
+
+export interface Prediction {
+  id: string;
+  userId: string;
+  tokenId: string;
+  priceRange: string;
+  percentage: number;
+  createdAt: Date;
+  user: {
+    id: string;
+    name?: string;
+    username?: string;
+  };
+}
+
+export interface Token {
+  id: string;
+  symbol: string;
+  name: string;
+  address: string;
+  network: 'solana' | 'bsc';
+  price: number;
+  marketCap: number;
+  volume24h: number;
+  priceChange24h: number;
+  supply: number;
+  liquidity: number;
+  rCurve: number;
+  image?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TokenWithComments extends Token {
+  comments: Comment[];
+  predictions: Prediction[];
+}
+
+// Additional utility types
+export interface TokenSearchResult {
+  tokens: Token[];
+  total: number;
+  hasMore: boolean;
+}
+
+export interface CommentWithReplies extends Comment {
+  replies: Comment[];
+  replyCount: number;
+}
+
+export interface PredictionStats {
+  priceRange: string;
+  percentage: number;
+  votes: number;
+  userVoted?: boolean;
+}
+
+export interface TokenPrice {
+  current: number;
+  change24h: number;
+  changePercentage24h: number;
+  high24h: number;
+  low24h: number;
+  volume24h: number;
+  marketCap: number;
+  lastUpdated: Date;
+}
+
+// API Response types
+export interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
+// Search related types
+export interface SearchFilters {
+  network?: 'solana' | 'bsc' | 'all';
+  priceRange?: {
+    min?: number;
+    max?: number;
+  };
+  marketCapRange?: {
+    min?: number;
+    max?: number;
+  };
+  sortBy?: 'price' | 'marketCap' | 'volume' | 'change' | 'newest';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface SearchQuery {
+  query: string;
+  filters?: SearchFilters;
+  page?: number;
+  limit?: number;
+}
+
+// Authentication types
+export interface AuthUser extends User {
+  accessToken?: string;
+  refreshToken?: string;
+  isNewUser?: boolean;
+}
+
+// WebSocket message types for real-time updates
+export interface PriceUpdateMessage {
+  type: 'PRICE_UPDATE';
+  tokenId: string;
+  price: number;
+  change24h: number;
+  timestamp: Date;
+}
+
+export interface CommentUpdateMessage {
+  type: 'NEW_COMMENT' | 'COMMENT_LIKED' | 'COMMENT_DELETED';
+  tokenId: string;
+  comment: Comment;
+  timestamp: Date;
+}
+
+export interface PredictionUpdateMessage {
+  type: 'NEW_PREDICTION';
+  tokenId: string;
+  prediction: Prediction;
+  stats: PredictionStats[];
+  timestamp: Date;
+}
+
+export type WebSocketMessage = 
+  | PriceUpdateMessage 
+  | CommentUpdateMessage 
+  | PredictionUpdateMessage;
