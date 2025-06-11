@@ -6,7 +6,7 @@ import { DexScreenerAPI } from '../../../lib/dexscreener';
 
 export async function POST(request: NextRequest) {
   try {
-    const { query, isAddress } = await request.json();
+    const { query, isAddress, tokenData } = await request.json();
     
     if (!query?.trim()) {
       return NextResponse.json({ error: 'Search query is required' }, { status: 400 });
@@ -46,28 +46,46 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    let dexData;
+    let finalTokenData = tokenData;
     
-    if (isAddress) {
-      dexData = await DexScreenerAPI.searchByAddress(query.trim());
-    } else {
-      const results = await DexScreenerAPI.searchBySymbol(searchQuery);
-      dexData = results[0]; 
+    if (!finalTokenData) {
+      let dexData;
+      
+      if (isAddress) {
+        dexData = await DexScreenerAPI.searchByAddress(query.trim());
+      } else {
+        const results = await DexScreenerAPI.searchBySymbol(searchQuery);
+        dexData = results[0]; 
+      }
+
+      if (!dexData) {
+        return NextResponse.json({
+          found: false,
+          error: 'Token not found',
+        });
+      }
+
+      finalTokenData = DexScreenerAPI.mapToTokenData(dexData);
     }
 
-    if (!dexData) {
-      return NextResponse.json({
-        found: false,
-        error: 'Token not found on DexScreener',
-      });
-    }
-
-    const tokenData = DexScreenerAPI.mapToTokenData(dexData);
-    
     const newToken = await prisma.token.create({
-      data: tokenData,
+      data: {
+        symbol: finalTokenData.symbol,
+        name: finalTokenData.name,
+        address: finalTokenData.address,
+        network: finalTokenData.network,
+        price: finalTokenData.price,
+        marketCap: finalTokenData.marketCap,
+        volume24h: finalTokenData.volume24h,
+        priceChange24h: finalTokenData.priceChange24h,
+        supply: finalTokenData.supply,
+        liquidity: finalTokenData.liquidity,
+        bCurve: finalTokenData.bCurve,
+        image: finalTokenData.image,
+      },
     });
 
+    // Check if user is authenticated and create welcome comment
     const session = await getServerSession(authOptions);
     let isFirstUser = false;
     
@@ -80,7 +98,7 @@ export async function POST(request: NextRequest) {
         isFirstUser = true;
         await prisma.comment.create({
           data: {
-            content: `🎉 Congratulations! You're the first person to discover ${tokenData.symbol} on CoinYaps! Welcome to the ${tokenData.name} community channel.`,
+            content: `🎉 Welcome to the ${finalTokenData.symbol} community! This channel has been created for discussing ${finalTokenData.name}.`,
             userId: user.id,
             tokenId: newToken.id,
           },
@@ -93,7 +111,7 @@ export async function POST(request: NextRequest) {
       token: newToken,
       isNewChannel: true,
       isFirstUser,
-      congratulations: `🎉 You discovered ${tokenData.symbol}! You're the first to create this channel.`,
+      congratulations: `🎉 New channel created for ${finalTokenData.symbol}!`,
     });
 
   } catch (error) {

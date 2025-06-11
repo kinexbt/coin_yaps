@@ -13,7 +13,7 @@ export interface Token {
   priceChange24h: number;
   supply: number;
   liquidity: number;
-  rCurve: number;
+  bCurve: number;
   image?: string;
   createdAt: Date;
   updatedAt: Date;

@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         priceChange24h: 0,
         supply: 0,
         liquidity: 0,
-        rCurve: 0,
+        bCurve: 0,
         image,
       },
     });

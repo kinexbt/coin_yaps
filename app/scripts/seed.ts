@@ -15,7 +15,7 @@ const sampleTokens = [
     priceChange24h: 15.5,
     supply: 1000000000,
     liquidity: 500000,
-    rCurve: 90.1,
+    bCurve: 90.1,
     image: 'https://example.com/nyla.png',
   },
   {
@@ -29,7 +29,7 @@ const sampleTokens = [
     priceChange24h: -8.2,
     supply: 1000000000000,
     liquidity: 200000,
-    rCurve: 75.3,
+    bCurve: 75.3,
   },
   {
     symbol: 'BONK',
@@ -42,7 +42,7 @@ const sampleTokens = [
     priceChange24h: 12.8,
     supply: 100000000000,
     liquidity: 80000,
-    rCurve: 45.7,
+    bCurve: 45.7,
   },
 ];
 

@@ -92,6 +92,21 @@ export class DexScreenerAPI {
     }
   }
 
+  private static calculateSupply(marketCap: number, priceUsd: number): number {
+    if (!marketCap || !priceUsd) return 0;
+    
+    const rawSupply = marketCap / priceUsd;
+    
+    // Scale down by 10^6 or 10^9 based on magnitude
+    if (rawSupply >= 1e9) {
+      return Math.round(rawSupply / 1e9);
+    } else if (rawSupply >= 1e6) {
+      return Math.round(rawSupply / 1e6);
+    }
+    
+    return Math.round(rawSupply);
+  }
+
   static mapToTokenData(dexData: DexScreenerToken): {
     symbol: string;
     name: string;
@@ -103,23 +118,25 @@ export class DexScreenerAPI {
     priceChange24h: number;
     supply: number;
     liquidity: number;
-    rCurve: number;
+    bCurve: number;
     image?: string;
   } {
     const network = dexData.chainId === 'solana' ? 'solana' : 'bsc';
+    const price = parseFloat(dexData.priceUsd || '0');
+    const marketCap = dexData.marketCap || dexData.fdv || 0;
     
     return {
       symbol: dexData.baseToken.symbol,
       name: dexData.baseToken.name,
       address: dexData.baseToken.address,
       network,
-      price: parseFloat(dexData.priceUsd || '0'),
-      marketCap: dexData.marketCap || dexData.fdv || 0,
+      price,
+      marketCap,
       volume24h: dexData.volume?.h24 || 0,
       priceChange24h: dexData.priceChange?.h24 || 0,
-      supply: 0, 
+      supply: this.calculateSupply(marketCap, price),
       liquidity: dexData.liquidity?.usd || 0,
-      rCurve: 0, 
+      bCurve: dexData.priceChange?.h24 || 0,
       image: dexData.info?.imageUrl,
     };
   }

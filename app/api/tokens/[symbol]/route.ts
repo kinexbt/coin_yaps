@@ -3,7 +3,7 @@ import { prisma } from '../../../lib/db';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ symbol: string }> } // Changed to Promise
+  { params }: { params: Promise<{ symbol: string }> } 
 ) {
   try {
     // Await the params Promise

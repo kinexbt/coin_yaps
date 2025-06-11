@@ -23,7 +23,7 @@ interface TokenData {
   image?: string;
   supply: number;
   liquidity: number;
-  rCurve: number;
+  bCurve: number;
 }
 
 export default function TokenPage() {
@@ -73,15 +73,15 @@ export default function TokenPage() {
   return (
     <div className="min-h-screen bg-[#282828] text-white flex">
       
-      
       {/* Main Content - Takes remaining space */}
       <div className="w-full flex flex-col">
         {/* Top Header */}
         <div className="flex items-center justify-between p-4 pl-8 pr-8 bg-[#282828]">
-            <h1 className="text-2xl font-bold">CoinYaps</h1>
+          <div className='flex justify-left'>
+            <h1 className="text-3xl font-bold tracking-wider">CoinYaps</h1>
 
             {/* Search Bar */}
-            <div className="relative">
+            <div className="relative ml-14">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
@@ -99,7 +99,8 @@ export default function TokenPage() {
                 </button>
               )}
             </div>
-          
+          </div>
+            
           <AuthButton />
         </div>
 
@@ -111,7 +112,7 @@ export default function TokenPage() {
 
           <Sidebar currentToken={tokenData} />
 
-          <div className='min-w-1/2'>
+          <div className='w-3/5'>
             <TokenHeader token={tokenData} />
 
             {/* Center - Comments Section */}
@@ -149,15 +150,15 @@ export default function TokenPage() {
               </div>
 
               {/* Comments Section */}
-              <div className="flex-1 px-6 pb-6 overflow-y-auto">
+              <div className="flex-1 px-6 pb-6 overflow-hidden">
                 <CommentSection tokenId={tokenData.id} />
               </div>
             </div>
           </div>
          {/* Right Panel */}
-          <div className="w-1/4 border-l border-gray-700 bg-[#101114] flex flex-col">
+          <div className="w-1/5 border-l border-gray-700 bg-[#101114] flex flex-col">
             <div className="h-1/2">
-              <h3 className="text-lg font-bold border-b border-gray-700 p-3">Latest ${tokenData.symbol} News</h3>
+              <h3 className="text-md font-bold border-b border-gray-700 px-3 py-2">Latest ${tokenData.symbol} News</h3>
               <div className="space-y-4 text-sm text-gray-400 p-3">
                 <p>
                   Use the official X API (formerly Twitter) API to access tweets or replies related to CA (e.g., tagged with ${tokenData.symbol} or CA).
@@ -175,7 +176,7 @@ export default function TokenPage() {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center absolute bottom-0 left-0 right-0 bg-black p-3 text-center">
+        <div className="flex justify-between fixed items-center absolute bottom-0 left-0 right-0 bg-black p-3 text-center">
           
           <div></div>
           <p className="text-gray-400 text-sm">
